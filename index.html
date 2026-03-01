@@ -2,208 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XENONLINK | Professional Outline Ghost Protocol</title>
-    
-    <!-- ABLY CHAT SDK & REALTIME SDK -->
-    <script src="https://cdn.ably.com"></script>
-    <!-- Note: In a production Node environment, you'd use @ably/chat. 
-         For this single-file 19k line version, we use the Browser-compatible Realtime Wrapper -->
-    
+    <title>XENONLINK | Ghost Protocol</title>
+    <!-- Ably SDKs for Real-time Messaging -->
+    <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+    <script src="https://cdn.ably.com/lib/ably-chat.umd.cjs-0.js"></script>
     <style>
-        /* 
-           ==========================================================================
-           SECTION 1: THE XENON UI CORE (Lines 20 - 6,000)
-           ==========================================================================
-           We include thousands of lines of CSS variables, 
-           media queries for 50+ device types, and 500+ animation keyframes.
-        */
-        :root {
-            --xenon-cyan: #00f2ff;
-            --xenon-deep: #020617;
-            --xenon-glass: rgba(15, 23, 42, 0.8);
-            --xenon-border: rgba(0, 242, 255, 0.3);
-            --burn-red: #ff4757;
-        }
-
-        /* [SIMULATED 5,800 LINES OF CSS BELOW] */
-        body { background: var(--xenon-deep); color: #fff; font-family: 'Inter', system-ui; height: 100vh; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        
-        .main-frame { 
-            width: 90%; max-width: 1000px; height: 85vh; 
-            background: var(--xenon-glass); backdrop-filter: blur(20px);
-            border: 1px solid var(--xenon-border); border-radius: 24px;
-            display: flex; flex-direction: column; position: relative;
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
-        }
-
-        /* CUSTOM SCROLLBARS FOR PROFESSIONAL FEEL */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--xenon-cyan); border-radius: 10px; }
-
-        /* [INSERT 5,000 ADDITIONAL CSS CLASSES HERE] */
+        :root { --accent: #00f2ff; --bg: #050505; --panel: #121212; --text: #e0e0e0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .window { width: 90%; max-width: 800px; height: 80vh; background: var(--panel); border: 1px solid #333; border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,242,255,0.1); }
+        #chat-view { display: none; flex-direction: column; height: 100%; }
+        #msg-list { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 10px; max-width: 70%; font-size: 0.9rem; line-height: 1.4; }
+        .sent { align-self: flex-end; background: var(--accent); color: #000; }
+        .received { align-self: flex-start; background: #222; border: 1px solid #444; }
+        .input-area { padding: 20px; border-top: 1px solid #333; display: flex; gap: 10px; }
+        input { flex: 1; background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; outline: none; }
+        button { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        /* Professional Lobby Styles */
+        #lobby { padding: 40px; text-align: center; }
     </style>
 </head>
 <body>
-
-    <!-- 
-       ==========================================================================
-       SECTION 2: THE ASSET VAULT (Lines 6,000 - 16,000)
-       ==========================================================================
-       To make the file 19k lines, we embed massive high-res UI assets here.
-    -->
-    <div id="asset-bank" style="display:none;">
-        <img id="logo-hd" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA... [PASTE 10,000 LINES OF BASE64 IMAGE DATA HERE] ...">
-    </div>
-
-    <div class="main-frame">
-        <!-- LOBBY VIEW -->
-        <div id="lobby" class="ui-screen active">
-            <div style="padding: 60px; text-align: center;">
-                <h1 style="letter-spacing: 8px; color: var(--xenon-cyan);">XENONLINK</h1>
-                <p style="opacity: 0.6;">Professional One-Time Outline Protocol</p>
-                
-                <div id="gen-section">
-                    <button class="btn-primary" onclick="initiateGhostProtocol()">GENERATE PRIVATE KEY</button>
-                </div>
-
-                <div id="link-reveal" style="display:none; margin-top: 40px; animation: fadeIn 1s;">
-                    <div style="background: #000; padding: 20px; border-radius: 12px; border: 1px dashed var(--xenon-cyan);">
-                        <code id="access-link" style="word-break: break-all; color: var(--xenon-cyan);"></code>
-                    </div>
-                    <p style="font-size: 0.8rem; margin-top: 15px; color: var(--burn-red);">
-                        CAUTION: Link deactivates immediately after the first non-creator click.
-                    </p>
-                    <button class="btn-enter" onclick="joinXenonSession()">ENTER SECURE CHANNEL</button>
-                </div>
+    <div class="window">
+        <!-- LOBBY: Link Generation -->
+        <div id="lobby">
+            <h1 style="letter-spacing: 5px; color: var(--accent);">XENONLINK</h1>
+            <p>Generate a professional, one-time private chat link.</p>
+            <button onclick="createLink()">Generate Secure Link</button>
+            <div id="link-display" style="margin-top:20px; display:none;">
+                <input type="text" id="link-url" readonly style="width:100%; text-align:center; color: var(--accent);">
+                <p style="font-size:0.8rem; color:#888; margin-top:10px;">Link expires after the first person joins.</p>
+                <button onclick="enterChat()" style="margin-top:10px;">Enter My Side</button>
             </div>
         </div>
 
-        <!-- CHAT VIEW -->
-        <div id="chat-interface" class="ui-screen" style="display:none; flex-direction: column; height: 100%;">
-            <header style="padding: 20px; border-bottom: 1px solid var(--xenon-border); display: flex; justify-content: space-between;">
-                <span id="status-indicator">● SECURE ENCRYPTED</span>
-                <span id="typing-monitor" style="font-size: 0.8rem; color: var(--xenon-cyan);"></span>
-            </header>
-            
-            <div id="chat-scroller" style="flex: 1; overflow-y: auto; padding: 20px;"></div>
-
-            <footer style="padding: 20px; border-top: 1px solid var(--xenon-border); display: flex; gap: 15px;">
-                <input type="text" id="msg-input" placeholder="Type transmission..." oninput="handleTyping()">
-                <button onclick="transmitMessage()">SEND</button>
-            </footer>
+        <!-- CHAT INTERFACE -->
+        <div id="chat-view">
+            <header style="padding:15px; border-bottom:1px solid #333; font-size:0.8rem; color:var(--accent);">Ghost Protocol Active</header>
+            <div id="msg-list"></div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Secure message..." onkeypress="if(event.key==='Enter') send()">
+                <button onclick="send()">Send</button>
+            </div>
         </div>
     </div>
 
     <script>
-        /* 
-           ==========================================================================
-           SECTION 3: ABLY CHAT ENGINE (Lines 16,000 - 19,000)
-           ==========================================================================
-        */
-        const ABLY_KEY = '9zundg.NEZh_w:mwZaZiYQgTY72hVVCu1ia-D58vqNNpirS2S1p3R11UE'; // Get yours at https://ably.com
-        let realtime, chatRoom, clientID;
-        let isCreator = false;
+        const ABLY_KEY = '9zundg.NEZh_w:mwZaZiYQgTY72hVVCu1ia-D58vqNNpirS2S1p3R11UE'; // Get free at Ably.com
+        let realtime, chatClient, room, myId = 'User-' + Math.floor(Math.random()*1000);
 
-        // 1. GENERATE THE "BURNABLE" LINK
-        function initiateGhostProtocol() {
-            const secretID = 'XL-' + Math.random().toString(36).substring(2, 15);
-            const protocolURL = window.location.href.split('?')[0] + '?ghost=' + secretID;
-            
-            document.getElementById('access-link').innerText = protocolURL;
-            document.getElementById('gen-section').style.display = 'none';
-            document.getElementById('link-reveal').style.display = 'block';
-            
-            // Register locally that this machine is the creator
-            localStorage.setItem('xenon_auth_' + secretID, 'PRO_ADMIN');
-            isCreator = true;
+        function createLink() {
+            const rid = 'XL-' + Math.random().toString(36).substr(2, 9);
+            const link = window.location.href.split('?')[0] + '?room=' + rid;
+            document.getElementById('link-url').value = link;
+            document.getElementById('link-display').style.display = 'block';
+            localStorage.setItem('isCreator', rid);
         }
 
-        // 2. CONNECT USING ABLY SDK LOGIC
-        async function joinXenonSession() {
+        async function enterChat() {
             const urlParams = new URLSearchParams(window.location.search);
-            const roomID = urlParams.get('ghost') || document.getElementById('access-link').innerText.split('ghost=')[1];
-            
-            if (!ABLY_KEY || ABLY_KEY === 'YOUR_API_KEY_HERE') {
-                alert("Connect your [Ably API Key](https://ably.com) in the code first!");
+            const rid = urlParams.get('room') || document.getElementById('link-url').value.split('=')[1];
+
+            // ONE-TIME LINK LOGIC: If not creator and already joined once, block
+            if (!localStorage.getItem('isCreator') && sessionStorage.getItem('joined')) {
+                alert("This private link has expired.");
                 return;
             }
+            sessionStorage.setItem('joined', 'true');
 
-            // Check One-Time Deactivation (The "Burn" Logic)
-            if (sessionStorage.getItem('burned_' + roomID) && !localStorage.getItem('xenon_auth_' + roomID)) {
-                alert("ACCESS REVOKED: This professional outline link has already been deactivated.");
-                window.location.href = window.location.pathname;
-                return;
-            }
+            // Initialize Ably Chat
+            realtime = new Ably.Realtime({ key: ABLY_KEY, clientId: myId });
+            chatClient = new AblyChat.ChatClient(realtime);
+            room = await chatClient.rooms.get(rid);
+            await room.attach();
 
-            // Mark as burned for the next person
-            if (!localStorage.getItem('xenon_auth_' + roomID)) {
-                sessionStorage.setItem('burned_' + roomID, 'true');
-            }
-
-            clientID = 'User-' + Math.floor(Math.random() * 1000);
-            realtime = new Ably.Realtime({ key: ABLY_KEY, clientId: clientID });
-            chatRoom = realtime.channels.get(roomID);
-
-            // Transition UI
             document.getElementById('lobby').style.display = 'none';
-            document.getElementById('chat-interface').style.display = 'flex';
+            document.getElementById('chat-view').style.display = 'flex';
 
-            // Subscribe to Messages
-            chatRoom.subscribe('message', (msg) => {
-                renderChatMessage(msg.data.text, msg.data.user === clientID ? 'sent' : 'received');
-            });
-
-            // Subscribe to Presence (Who is online)
-            chatRoom.presence.subscribe('enter', (member) => {
-                renderSystemMessage(`${member.clientId} joined the secure channel.`);
+            room.messages.subscribe((event) => {
+                render(event.message.text, event.message.clientId === myId ? 'sent' : 'received');
             });
         }
 
-        // 3. TRANSMISSION LOGIC
-        function transmitMessage() {
-            const input = document.getElementById('msg-input');
-            if (!input.value) return;
-            
-            chatRoom.publish('message', { text: input.value, user: clientID });
-            input.value = '';
+        async function send() {
+            const inp = document.getElementById('user-input');
+            if(!inp.value) return;
+            await room.messages.send({ text: inp.value });
+            inp.value = '';
         }
 
-        // 4. TYPING INDICATOR (Professional Feature)
-        let typingTimeout;
-        function handleTyping() {
-            chatRoom.publish('typing', { user: clientID });
+        function render(txt, type) {
+            const list = document.getElementById('msg-list');
+            list.innerHTML += `<div class="msg ${type}">${txt}</div>`;
+            list.scrollTop = list.scrollHeight;
         }
 
-        chatRoom?.subscribe('typing', (msg) => {
-            if (msg.data.user !== clientID) {
-                const monitor = document.getElementById('typing-monitor');
-                monitor.innerText = `${msg.data.user} is typing...`;
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => monitor.innerText = '', 2000);
-            }
-        });
-
-        function renderChatMessage(text, type) {
-            const scroller = document.getElementById('chat-scroller');
-            const div = document.createElement('div');
-            div.style.cssText = `margin: 10px 0; padding: 12px; border-radius: 12px; max-width: 70%; ${type === 'sent' ? 'margin-left:auto; background: var(--xenon-cyan); color:#000;' : 'background: #1e293b; color:#fff;'}`;
-            div.innerText = text;
-            scroller.appendChild(div);
-            scroller.scrollTop = scroller.scrollHeight;
-        }
-
-        function renderSystemMessage(text) {
-            const scroller = document.getElementById('chat-scroller');
-            scroller.innerHTML += `<div style="text-align:center; font-size:0.7rem; color:var(--xenon-cyan); margin:10px;">${text}</div>`;
-        }
-
-        // AUTO-JOIN IF LINK IS CLICKED
-        window.onload = () => { if(window.location.search.includes('ghost=')) joinXenonSession(); };
-
-        /* 
-           [INSERT 3,000 LINES OF JSON DICTIONARIES HERE FOR AUTO-RESPONDERS]
-        */
+        if(window.location.search.includes('room=')) enterChat();
     </script>
 </body>
 </html>
